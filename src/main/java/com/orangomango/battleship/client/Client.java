@@ -10,6 +10,7 @@ public class Client{
 	private BufferedReader reader;
 	private BufferedWriter writer;
 	private boolean connected, currentTurn;
+	private int id;
 
 	public Client(String host, int port){
 		try {
@@ -23,6 +24,7 @@ public class Client{
 				quit();
 			} else if (confirm.equals(Util.JOIN_ACCEPTED)){
 				System.out.println("Joined successfully");
+				this.id = Integer.parseInt(this.reader.readLine());
 				this.connected = true;
 			}
 		} catch (IOException ex){
@@ -87,5 +89,9 @@ public class Client{
 
 	public boolean isConnected(){
 		return this.connected;
+	}
+
+	public int getId(){
+		return this.id;
 	}
 }

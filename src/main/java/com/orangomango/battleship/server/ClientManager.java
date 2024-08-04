@@ -27,6 +27,8 @@ public class ClientManager implements Runnable{
 				this.inside = true;
 				this.writer.write(Util.JOIN_ACCEPTED);
 				this.writer.newLine();
+				this.writer.write(Integer.toString(this.server.getClients().size()+1));
+				this.writer.newLine();
 				this.writer.flush();
 			}
 		} catch (IOException ex){
