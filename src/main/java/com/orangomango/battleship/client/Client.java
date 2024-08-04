@@ -4,6 +4,7 @@ import java.net.*;
 import java.io.*;
 
 import com.orangomango.battleship.Util;
+import com.orangomango.battleship.core.Board;
 
 public class Client{
 	private Socket socket;
@@ -32,7 +33,7 @@ public class Client{
 		}
 	}
 
-	public void listen(){
+	public void listen(Board board, int[][] enemyBoard){
 		Thread daemon = new Thread(() -> {
 			try {
 				while (isConnected()){
@@ -46,11 +47,24 @@ public class Client{
 						} else if (message.startsWith(Util.SHOOT_MESSAGE)){
 							String pos = message.split(":")[1];
 							System.out.println(pos);
-							// Update local board
-							// ...
+							final int px = Util.getCol(pos.charAt(0));
+							final int py = Integer.parseInt(String.valueOf(pos.charAt(1)))-1;
+							board.update(px, py);
+							send(Util.ENEMY_RESPONSE);
+							send(String.format("%d %d %d", px, py, board.getCell(px, py)));
 						} else if (message.equals(Util.PLAYER_TURN)){
 							this.currentTurn = true;
 							System.out.println("Your turn!");
+						} else if (message.equals(Util.ENEMY_RESPONSE)){
+							String data = this.reader.readLine();
+							final int px = Integer.parseInt(data.split(" ")[0]);
+							final int py = Integer.parseInt(data.split(" ")[1]);
+							final int value = Integer.parseInt(data.split(" ")[2]);
+							enemyBoard[px][py] = value;
+							Util.schedule(() -> {
+								this.currentTurn = false;
+								send(Util.PLAYER_TURN);
+							}, 1000);
 						}
 					}
 				}
@@ -67,10 +81,6 @@ public class Client{
 			this.writer.write(message);
 			this.writer.newLine();
 			this.writer.flush();
-
-			if (this.currentTurn){
-				this.currentTurn = false;
-			}
 		} catch (IOException ex){
 			ex.printStackTrace();
 		}
@@ -89,6 +99,10 @@ public class Client{
 
 	public boolean isConnected(){
 		return this.connected;
+	}
+
+	public boolean isCurrentTurn(){
+		return this.currentTurn;
 	}
 
 	public int getId(){

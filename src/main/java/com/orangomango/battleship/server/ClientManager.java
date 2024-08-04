@@ -69,7 +69,9 @@ public class ClientManager implements Runnable{
 						broadcast(Util.PLAYER_READY);
 					} else if (header.equals(Util.SHOOT_MESSAGE)){
 						String message = this.reader.readLine();
-						broadcast(message);	
+						broadcast(message);
+					} else {
+						broadcast(header);
 					}
 				} else {
 					// ERROR

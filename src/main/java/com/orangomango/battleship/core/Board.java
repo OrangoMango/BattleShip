@@ -39,16 +39,27 @@ public class Board{
 		}
 	}
 
-	public void render(GraphicsContext gc){
-		gc.setStroke(Color.WHITE);
+	public void update(int x, int y){
+		int num = this.board[x][y];
+		if (num == 0){
+			this.board[x][y] = 2;
+		} else if (num == 1){
+			this.board[x][y] = 3;
+		}
+	}
+
+	public void render(GraphicsContext gc, int[][] enemyBoard){
+		gc.setStroke(enemyBoard == null ? Color.WHITE : Color.LIME);
 		gc.setLineWidth(2);
 		gc.strokeRect(100, 100, 600, 600);
 
+		final int[][] board = enemyBoard == null ? this.board : enemyBoard;
+
 		for (int x = 0; x < 10; x++){
 			for (int y = 0; y < 10; y++){
-				if (this.board[x][y] != 0){
+				if (board[x][y] != 0){
 					Color color = null;
-					switch (this.board[x][y]){
+					switch (board[x][y]){
 						case 1:
 							color = Color.WHITE;
 							break;
@@ -60,7 +71,7 @@ public class Board{
 							break;
 					}
 
-					gc.setFill(Color.WHITE);
+					gc.setFill(color);
 					gc.fillRect(100+x*60, 100+y*60, 60, 60);
 				}
 			}
@@ -79,6 +90,10 @@ public class Board{
 		return this.hasData;
 	}
 
+	public int getCell(int x, int y){
+		return this.board[x][y];
+	}
+
 	@Override
 	public String toString(){
 		StringBuilder builder = new StringBuilder();
@@ -86,7 +101,7 @@ public class Board{
 			for (int x = 0; x < 10; x++){
 				builder.append(Integer.toString(this.board[x][y]));
 			}
-			builder.append("\n");
+			if (y != 9) builder.append("\n");
 		}
 
 		return builder.toString();

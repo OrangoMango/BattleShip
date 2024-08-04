@@ -20,6 +20,7 @@ public class ClientApplication extends Application{
 
 	private Client client;
 	private Board board;
+	private int[][] enemyBoard = new int[10][10];
 	private HashMap<KeyCode, Boolean> keys = new HashMap<>();
 	private boolean gameStarted = false;
 
@@ -37,15 +38,21 @@ public class ClientApplication extends Application{
 		canvas.setOnMousePressed(e -> {
 			int px = (int)((e.getX()-100) / 60);
 			int py = (int)((e.getY()-100) / 60);
-			if (!this.gameStarted){
+			if (this.gameStarted){
+				if (this.client.isCurrentTurn()){
+					String pos = Util.convertPos(px, py);
+					this.client.send(Util.SHOOT_MESSAGE);
+					this.client.send(Util.SHOOT_MESSAGE+":"+pos);
+				}
+			} else {
 				this.board.toggleCell(px, py);
 			}
 		});
 
-		this.client = new Client(Util.getLocalAddress(), 1234);
-		this.client.listen();
-
 		this.board = new Board();
+
+		this.client = new Client(Util.getLocalAddress(), 1234);
+		this.client.listen(this.board, this.enemyBoard);
 
 		AnimationTimer loop = new AnimationTimer(){
 			@Override
@@ -78,6 +85,6 @@ public class ClientApplication extends Application{
 			this.keys.put(KeyCode.SPACE, false);
 		}
 
-		this.board.render(gc);
+		this.board.render(gc, this.client.isCurrentTurn() ? this.enemyBoard : null);
 	}
 }
