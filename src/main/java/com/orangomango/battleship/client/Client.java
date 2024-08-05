@@ -61,10 +61,12 @@ public class Client{
 							final int py = Integer.parseInt(data.split(" ")[1]);
 							final int value = Integer.parseInt(data.split(" ")[2]);
 							enemyBoard[px][py] = value;
-							Util.schedule(() -> {
-								this.currentTurn = false;
-								send(Util.PLAYER_TURN);
-							}, 1000);
+							if (value == 2){
+								Util.schedule(() -> {
+									this.currentTurn = false;
+									send(Util.PLAYER_TURN);
+								}, 1000);
+							}
 						}
 					}
 				}

@@ -19,8 +19,8 @@ public class Server{
 			ex.printStackTrace();
 		}
 
-		this.board1 = new Board();
-		this.board2 = new Board();
+		this.board1 = new Board(null);
+		this.board2 = new Board(null);
 	}
 
 	public void listen(){

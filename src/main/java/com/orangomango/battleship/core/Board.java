@@ -3,6 +3,8 @@ package com.orangomango.battleship.core;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
+
 public class Board{
 	/*
 	 * 0 - empty
@@ -12,9 +14,17 @@ public class Board{
 	*/
 	private int[][] board;
 	private boolean hasData;
+	private ArrayList<Ship> ships;
 
-	public Board(){
+	public Board(ArrayList<Ship> ships){
 		this.board = new int[10][10];
+		this.ships = ships;
+	}
+
+	public void fillFromShips(){
+		for (Ship ship : this.ships){
+			ship.updateBoard(this);
+		}
 	}
 
 	public void setData(String data){
@@ -28,14 +38,9 @@ public class Board{
 		}
 	}
 
-	public void toggleCell(int x, int y){
+	public void setCell(int x, int y){
 		if (x >= 0 && y >= 0 && x < 10 && y < 10){
-			int num = this.board[x][y];
-			if (num == 0){
-				this.board[x][y] = 1;
-			} else if (num == 1){
-				this.board[x][y] = 0;
-			}
+			this.board[x][y] = 1;
 		}
 	}
 
@@ -46,6 +51,9 @@ public class Board{
 		} else if (num == 1){
 			this.board[x][y] = 3;
 		}
+
+		// Check if a ship got destroyed
+		// TODO ...
 	}
 
 	public void render(GraphicsContext gc, int[][] enemyBoard){
