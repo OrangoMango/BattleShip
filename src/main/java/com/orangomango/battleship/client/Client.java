@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import com.orangomango.battleship.Util;
 import com.orangomango.battleship.core.Board;
+import com.orangomango.battleship.core.Ship;
 
 public class Client{
 	private Socket socket;
@@ -17,6 +18,11 @@ public class Client{
 
 	public static HashSet<String> servers = new HashSet<>();
 	private static volatile boolean discovering = true;
+
+	@FunctionalInterface
+	public static interface ShipDestroyedEvent{
+		public void fire(boolean mySide, Ship ship);
+	}
 
 	public Client(String host, int port){
 		try {
@@ -41,7 +47,7 @@ public class Client{
 	public static void discover(){
 		Thread t = new Thread(() -> {
 			try {
-				DatagramSocket socket = new DatagramSocket(1234);
+				DatagramSocket socket = new DatagramSocket(Util.GAME_PORT);
 				while (Client.discovering){
 					DatagramPacket packet = new DatagramPacket(new byte[32], 32);
 					socket.receive(packet);
@@ -63,7 +69,7 @@ public class Client{
 		Client.discovering = false;
 	}
 
-	public void listen(Board board, int[][] enemyBoard, Consumer<Boolean> onShipDestroyed, Consumer<String> onGameOver){
+	public void listen(Board board, int[][] enemyBoard, ShipDestroyedEvent onShipDestroyed, Consumer<String> onGameOver){
 		Thread daemon = new Thread(() -> {
 			try {
 				while (isConnected()){
@@ -79,8 +85,8 @@ public class Client{
 							System.out.println(pos);
 							final int px = Util.getCol(pos.charAt(0));
 							final int py = Integer.parseInt(String.valueOf(pos.charAt(1)))-1;
-							boolean shipDestroyed = board.update(px, py);
-							if (shipDestroyed) onShipDestroyed.accept(true);
+							final Ship shipDestroyed = board.update(px, py);
+							if (shipDestroyed != null) onShipDestroyed.fire(true, shipDestroyed);
 							send(Util.ENEMY_RESPONSE);
 							send(String.format("%d %d %d %s", px, py, board.getCell(px, py), shipDestroyed));
 
@@ -98,8 +104,8 @@ public class Client{
 							final int px = Integer.parseInt(data.split(" ")[0]);
 							final int py = Integer.parseInt(data.split(" ")[1]);
 							final int value = Integer.parseInt(data.split(" ")[2]);
-							final boolean shipDestroyed = Boolean.parseBoolean(data.split(" ")[3]);
-							if (shipDestroyed) onShipDestroyed.accept(false);
+							final Ship shipDestroyed = Ship.parseShip(data.split(" ")[3]);
+							if (shipDestroyed != null) onShipDestroyed.fire(false, shipDestroyed);
 							enemyBoard[px][py] = value;
 							if (value == 2){
 								Util.schedule(() -> {

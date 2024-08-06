@@ -7,7 +7,7 @@ import javafx.geometry.Rectangle2D;
 import java.util.ArrayList;
 
 public class Ship{
-	private static Image IMAGE = new Image(Ship.class.getResourceAsStream("/ships.png"));
+	private static final Image IMAGE = new Image(Ship.class.getResourceAsStream("/ships.png"));
 
 	private double x, y, width, height;
 
@@ -101,5 +101,22 @@ public class Ship{
 
 	public double getY(){
 		return this.y;
+	}
+
+	@Override
+	public String toString(){
+		return String.format("%s;%s;%s;%s", this.x, this.y, this.width, this.height);
+	}
+
+	public static Ship parseShip(String text){
+		if (text.equals("null")) return null;
+
+		String[] parts = text.split(";");
+		double x = Double.parseDouble(parts[0]);
+		double y = Double.parseDouble(parts[1]);
+		double w = Double.parseDouble(parts[2]);
+		double h = Double.parseDouble(parts[3]);
+
+		return new Ship(x, y, w, h);
 	}
 }

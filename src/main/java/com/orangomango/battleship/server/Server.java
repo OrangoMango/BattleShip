@@ -13,6 +13,7 @@ public class Server{
 	private Board board1, board2;
 	private String host;
 	private int port;
+	private boolean serverStarted = false;
 
 	public Server(String host, int port){
 		this.host = host;
@@ -22,12 +23,33 @@ public class Server{
 			this.server = new ServerSocket(this.port, 2, InetAddress.getByName(this.host));
 		} catch (IOException ex){
 			ex.printStackTrace();
+			Util.showErrorMessage("Error", "Server error", "Could not start server");
+			return;
 		}
 
 		this.board1 = new Board(null);
 		this.board2 = new Board(null);
+		this.serverStarted = true;
 
-		startBroadcast();
+		//startBroadcast();
+	}
+
+	public void doWhenReady(Runnable r){
+		Thread waiter = new Thread(() -> {
+			while (true){
+				try {
+					if (this.clients.size() == 1){
+						r.run();
+						break;
+					}
+					Thread.sleep(500);
+				} catch (InterruptedException ex){
+					ex.printStackTrace();
+				}
+			}
+		});
+		waiter.setDaemon(true);
+		waiter.start();
 	}
 
 	private void startBroadcast(){
@@ -36,7 +58,7 @@ public class Server{
 				DatagramSocket socket = new DatagramSocket();
 				while (!this.server.isClosed()){
 					byte[] information = (this.host+";"+this.port).getBytes();
-					DatagramPacket packet = new DatagramPacket(information, information.length, InetAddress.getByName("255.255.255.255"), 1234);
+					DatagramPacket packet = new DatagramPacket(information, information.length, InetAddress.getByName("255.255.255.255"), Util.GAME_PORT);
 					socket.send(packet);
 					Thread.sleep(500);
 				}
@@ -50,7 +72,7 @@ public class Server{
 
 	public void listen(){
 		Thread daemon = new Thread(() -> {
-			while (true){
+			while (!this.server.isClosed()){
 				try {
 					Socket socket = this.server.accept();
 					ClientManager manager = new ClientManager(this, socket);
@@ -66,6 +88,14 @@ public class Server{
 		});
 		daemon.setDaemon(true);
 		daemon.start();
+	}
+
+	public void destroy(){
+		try {
+			this.server.close();
+		} catch (IOException ex){
+			ex.printStackTrace();
+		}
 	}
 
 	public void startGame(){
@@ -85,5 +115,9 @@ public class Server{
 
 	public Board getBoard2(){
 		return this.board2;
+	}
+
+	public boolean isServerStarted(){
+		return this.serverStarted;
 	}
 }

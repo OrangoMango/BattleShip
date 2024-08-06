@@ -47,7 +47,7 @@ public class Board{
 		}
 	}
 
-	public boolean update(int x, int y){
+	public Ship update(int x, int y){
 		int num = this.board[x][y];
 		if (num == 0){
 			this.board[x][y] = 2;
@@ -56,16 +56,13 @@ public class Board{
 		}
 
 		// Check if a ship got destroyed
-		boolean shipDestroyed = false;
-
 		for (Ship ship : this.ships){
 			if (ship.contains(x, y) && ship.isDestroyed(this)){
-				shipDestroyed = true;
-				break;
+				return ship;
 			}
 		}
 
-		return shipDestroyed;
+		return null;
 	}
 
 	public boolean isGameOver(){

@@ -1,5 +1,8 @@
 package com.orangomango.battleship;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+
 import java.net.*;
 
 public class Util{
@@ -14,10 +17,11 @@ public class Util{
 
 	public static final int WIDTH = 800;
 	public static final int HEIGHT = 800;
+	public static final int GAME_PORT = 12345;
 
 	public static String getLocalAddress(){
 		try (final DatagramSocket datagramSocket = new DatagramSocket()){
-			datagramSocket.connect(InetAddress.getByName("8.8.8.8"), 12345); 
+			datagramSocket.connect(InetAddress.getByName("127.0.0.1"), GAME_PORT); // 8.8.8.8
 			return datagramSocket.getLocalAddress().getHostAddress();
 		} catch (Exception ex){
 			ex.printStackTrace();
@@ -50,5 +54,15 @@ public class Util{
 				ex.printStackTrace();
 			}
 		}).start();
+	}
+
+	public static void showErrorMessage(String title, String headerText, String contentText){
+		Platform.runLater(() -> {
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.setTitle(title);
+			alert.setHeaderText(headerText);
+			alert.setContentText(contentText);
+			alert.showAndWait();
+		});
 	}
 }

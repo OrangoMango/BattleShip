@@ -22,6 +22,7 @@ public class GameScreen{
 	private HashMap<KeyCode, Boolean> keys = new HashMap<>();
 	private boolean gameStarted = false;
 	private ArrayList<Ship> ships = new ArrayList<>();
+	private ArrayList<Ship> enemyShips = new ArrayList<>();
 	private Ship dragShip = null;
 	private double dragOffsetX, dragOffsetY;
 	private double backupDragX, backupDragY;
@@ -100,9 +101,13 @@ public class GameScreen{
 
 		this.board = new Board(this.ships);
 
-		this.client = new Client(Util.getLocalAddress(), 1234);
-		this.client.listen(this.board, this.enemyBoard, mySide -> {
-			System.out.println(mySide);
+		this.client = new Client(Util.getLocalAddress(), Util.GAME_PORT);
+		this.client.listen(this.board, this.enemyBoard, (mySide, ship) -> {
+			if (mySide){
+				// TODO
+			} else {
+				this.enemyShips.add(ship);
+			}
 		}, boardStatus -> {
 			if (boardStatus == null){
 				System.out.println("GAME OVER (I lost)");
@@ -112,7 +117,9 @@ public class GameScreen{
 		});
 
 		if (!this.client.isConnected()){
-			System.exit(0); // Connection error
+			// Connection error
+			Util.showErrorMessage("Connection error", "Could not connect client", "There was an error while connecting to the server");
+			return;
 		}
 
 		AnimationTimer loop = new AnimationTimer(){
@@ -143,7 +150,11 @@ public class GameScreen{
 		}
 
 		this.board.render(gc, this.client.isCurrentTurn() ? this.enemyBoard : null);
-		if (!this.client.isCurrentTurn()){
+		if (this.client.isCurrentTurn()){
+			for (Ship ship : this.enemyShips){
+				ship.render(gc);
+			}
+		} else {
 			for (Ship ship : this.ships){
 				ship.render(gc);
 			}
