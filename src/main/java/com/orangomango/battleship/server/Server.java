@@ -40,7 +40,7 @@ public class Server{
 			}
 		});
 		daemon.setDaemon(true);
-		daemon.run(); // .start();
+		daemon.start();
 	}
 
 	public void startGame(){

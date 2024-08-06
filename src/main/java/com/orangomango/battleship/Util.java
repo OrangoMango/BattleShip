@@ -12,6 +12,9 @@ public class Util{
 	public static final String ENEMY_RESPONSE = "enemy_response";
 	public static final String GAMEOVER = "gameover";
 
+	public static final int WIDTH = 800;
+	public static final int HEIGHT = 800;
+
 	public static String getLocalAddress(){
 		try (final DatagramSocket datagramSocket = new DatagramSocket()){
 			datagramSocket.connect(InetAddress.getByName("127.0.0.1"), 12345); // 8.8.8.8

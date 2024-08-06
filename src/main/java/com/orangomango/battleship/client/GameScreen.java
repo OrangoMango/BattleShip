@@ -1,7 +1,5 @@
 package com.orangomango.battleship.client;
 
-import javafx.application.Application;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.canvas.*;
@@ -17,10 +15,7 @@ import com.orangomango.battleship.Util;
 import com.orangomango.battleship.core.Board;
 import com.orangomango.battleship.core.Ship;
 
-public class ClientApplication extends Application{
-	private static final int WIDTH = 800;
-	private static final int HEIGHT = 800;
-
+public class GameScreen{
 	private Client client;
 	private Board board;
 	private int[][] enemyBoard = new int[10][10];
@@ -30,11 +25,11 @@ public class ClientApplication extends Application{
 	private Ship dragShip = null;
 	private double dragOffsetX, dragOffsetY;
 	private double backupDragX, backupDragY;
+	private Scene scene;
 
-	@Override
-	public void start(Stage stage){
+	public GameScreen(){
 		StackPane pane = new StackPane();
-		Canvas canvas = new Canvas(WIDTH, HEIGHT);
+		Canvas canvas = new Canvas(Util.WIDTH, Util.HEIGHT);
 		pane.getChildren().add(canvas);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 		gc.setImageSmoothing(false);
@@ -128,19 +123,14 @@ public class ClientApplication extends Application{
 		};
 		loop.start();
 
-		Scene scene = new Scene(pane, WIDTH, HEIGHT);
-		scene.setFill(Color.BLACK);
-
-		stage.setTitle("Battleship client [player"+this.client.getId()+"]");
-		stage.setScene(scene);
-		stage.setResizable(false);
-		stage.show();
+		this.scene = new Scene(pane, Util.WIDTH, Util.HEIGHT);
+		this.scene.setFill(Color.BLACK);
 	}
 
 	private void update(GraphicsContext gc){
-		gc.clearRect(0, 0, WIDTH, HEIGHT);
+		gc.clearRect(0, 0, Util.WIDTH, Util.HEIGHT);
 		gc.setFill(Color.BLACK);
-		gc.fillRect(0, 0, WIDTH, HEIGHT);
+		gc.fillRect(0, 0, Util.WIDTH, Util.HEIGHT);
 
 		if (this.keys.getOrDefault(KeyCode.SPACE, false)){
 			// Send board and be ready
@@ -160,5 +150,13 @@ public class ClientApplication extends Application{
 		}
 
 		this.board.renderIndicators(gc, this.client.isCurrentTurn() ? this.enemyBoard : null);
+	}
+
+	public Client getClient(){
+		return this.client;
+	}
+	
+	public Scene getScene(){
+		return this.scene;
 	}
 }
