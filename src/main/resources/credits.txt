@@ -1,4 +1,5 @@
 BattleShip game, implementation in Java/JavaFX
+Local network multiplayer game
 --------
 
 Original board game published in 1931

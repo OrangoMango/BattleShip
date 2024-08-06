@@ -35,7 +35,7 @@ public class GameScreen{
 	private Stage stage;
 	private Server server;
 
-	public GameScreen(Stage stage, Server server){
+	public GameScreen(Stage stage, Server server, String ip, int port){
 		this.stage = stage;
 		this.server = server;
 		StackPane pane = new StackPane();
@@ -117,7 +117,7 @@ public class GameScreen{
 
 		this.board = new Board(this.ships);
 
-		this.client = new Client(Util.getLocalAddress(), Util.GAME_PORT);
+		this.client = new Client(ip, port);
 		this.client.listen(this.board, this.enemyBoard, (mySide, ship) -> {
 			if (mySide){
 				// TODO

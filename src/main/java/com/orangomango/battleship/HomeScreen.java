@@ -47,25 +47,30 @@ public class HomeScreen{
 
 		//Client.discover();
 
-		UiChoice startServerButton = new UiChoice(400, 200, "START SERVER", () -> {
-			this.server = new Server(Util.getLocalAddress(), Util.GAME_PORT);
+		UiChoice startServerButton = new UiChoice(400, 400, "START SERVER", () -> {
+			final String ip = Util.getLocalAddress();
+			this.server = new Server(ip, Util.GAME_PORT);
 			if (this.server.isServerStarted()){
 				System.out.println("Server started");
 				this.server.listen();
 				this.inputDisabled = true;
-				this.server.doWhenReady(() -> Platform.runLater(() -> startGameScreen()));
+				this.server.doWhenReady(() -> Platform.runLater(() -> startGameScreen(ip, Util.GAME_PORT)));
 			}
 		});
 		startServerButton.setSelected(true);
-		UiChoice connectButton = new UiChoice(400, 300, "CONNECT TO GAME", () -> {
-			// TODO: Use user's choice ip and port
-			startGameScreen();
+		UiChoice connectButton = new UiChoice(400, 500, "CONNECT TO GAME", () -> {
+			ServerSelectScreen sss = new ServerSelectScreen(this.stage);
+			Scene scene = sss.getScene();
+			if (scene != null){
+				this.loop.stop();
+				this.stage.setScene(scene);
+			}
 		});
-		UiChoice creditsButton = new UiChoice(400, 400, "CREDITS", () -> {
+		UiChoice creditsButton = new UiChoice(400, 600, "CREDITS", () -> {
 			this.showCredits = true;
 			this.offset = 0;
 		});
-		UiChoice quitButton = new UiChoice(400, 500, "QUIT", () -> System.exit(0));
+		UiChoice quitButton = new UiChoice(400, 700, "QUIT", () -> System.exit(0));
 
 		this.buttons.add(startServerButton);
 		this.buttons.add(connectButton);
@@ -87,8 +92,8 @@ public class HomeScreen{
 		this.scene.setFill(Color.BLACK);
 	}
 
-	private void startGameScreen(){
-		GameScreen gameScreen = new GameScreen(this.stage, this.server);
+	private void startGameScreen(String ip, int port){
+		GameScreen gameScreen = new GameScreen(this.stage, this.server, ip, port);
 		Scene scene = gameScreen.getScene();
 		if (scene != null){
 			this.loop.stop();
@@ -110,12 +115,17 @@ public class HomeScreen{
 			gc.setFont(FONT);
 			gc.setTextAlign(TextAlignment.CENTER);
 			gc.fillText(Util.CREDITS, 400, 400-this.offset);
+
+			if (this.keys.getOrDefault(KeyCode.LEFT, false)){
+				this.showCredits = false;
+				this.keys.put(KeyCode.LEFT, false);
+			}
 		} else {
 			if (this.inputDisabled){
-				if (this.keys.getOrDefault(KeyCode.SPACE, false)){
+				if (this.keys.getOrDefault(KeyCode.LEFT, false)){
 					this.inputDisabled = false;
 					this.server.destroy(); // Cancel game
-					this.keys.put(KeyCode.SPACE, false);
+					this.keys.put(KeyCode.LEFT, false);
 				}
 			} else {
 				if (this.keys.getOrDefault(KeyCode.UP, false)){

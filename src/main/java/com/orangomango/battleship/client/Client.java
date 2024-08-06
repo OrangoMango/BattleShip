@@ -19,6 +19,11 @@ public class Client{
 	public static HashSet<String> servers = new HashSet<>();
 	private static volatile boolean discovering = true;
 
+	static {
+		// DEBUG
+		Client.servers.add("127.0.0.1;12345");
+	}
+
 	@FunctionalInterface
 	public static interface ShipDestroyedEvent{
 		public void fire(boolean mySide, Ship ship);
