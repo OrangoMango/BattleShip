@@ -2,6 +2,7 @@ package com.orangomango.battleship.client;
 
 import java.net.*;
 import java.io.*;
+import java.util.function.Consumer;
 
 import com.orangomango.battleship.Util;
 import com.orangomango.battleship.core.Board;
@@ -33,7 +34,7 @@ public class Client{
 		}
 	}
 
-	public void listen(Board board, int[][] enemyBoard){
+	public void listen(Board board, int[][] enemyBoard, Consumer<Boolean> onShipDestroyed, Consumer<String> onGameOver){
 		Thread daemon = new Thread(() -> {
 			try {
 				while (isConnected()){
@@ -49,9 +50,17 @@ public class Client{
 							System.out.println(pos);
 							final int px = Util.getCol(pos.charAt(0));
 							final int py = Integer.parseInt(String.valueOf(pos.charAt(1)))-1;
-							board.update(px, py);
+							boolean shipDestroyed = board.update(px, py);
+							if (shipDestroyed) onShipDestroyed.accept(true);
 							send(Util.ENEMY_RESPONSE);
-							send(String.format("%d %d %d", px, py, board.getCell(px, py)));
+							send(String.format("%d %d %d %s", px, py, board.getCell(px, py), shipDestroyed));
+
+							// Check for gameover
+							if (board.isGameOver()){
+								send(Util.GAMEOVER);
+								send(board.toString());
+								onGameOver.accept(null);
+							}
 						} else if (message.equals(Util.PLAYER_TURN)){
 							this.currentTurn = true;
 							System.out.println("Your turn!");
@@ -60,6 +69,8 @@ public class Client{
 							final int px = Integer.parseInt(data.split(" ")[0]);
 							final int py = Integer.parseInt(data.split(" ")[1]);
 							final int value = Integer.parseInt(data.split(" ")[2]);
+							final boolean shipDestroyed = Boolean.parseBoolean(data.split(" ")[3]);
+							if (shipDestroyed) onShipDestroyed.accept(false);
 							enemyBoard[px][py] = value;
 							if (value == 2){
 								Util.schedule(() -> {
@@ -67,6 +78,13 @@ public class Client{
 									send(Util.PLAYER_TURN);
 								}, 1000);
 							}
+						} else if (message.equals(Util.GAMEOVER)){
+							StringBuilder builder = new StringBuilder();
+							for (int i = 0; i < 10; i++){
+								builder.append(this.reader.readLine());
+								builder.append("\n");
+							}
+							onGameOver.accept(builder.toString());
 						}
 					}
 				}

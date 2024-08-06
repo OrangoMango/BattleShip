@@ -1,12 +1,14 @@
 package com.orangomango.battleship.core;
 
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
 import javafx.geometry.Rectangle2D;
 
 import java.util.ArrayList;
 
 public class Ship{
+	private static Image IMAGE = new Image(Ship.class.getResourceAsStream("/ships.png"));
+
 	private double x, y, width, height;
 
 	public Ship(double x, double y, double w, double h){
@@ -22,8 +24,17 @@ public class Ship{
 	}
 
 	public void render(GraphicsContext gc){
-		gc.setFill(Color.LIME);
-		gc.fillRect(100+this.x*60+5, 100+this.y*60+5, this.width*60-10, this.height*60-10);
+		final int frameIndex = 5-(int)Math.max(this.width, this.height);
+
+		if (this.width < this.height){
+			gc.save();
+			gc.translate(100+(this.x+1)*60, 100+this.y*60);
+			gc.rotate(90);
+			gc.drawImage(IMAGE, 1, 1+18*frameIndex, 16*Math.max(this.width, this.height), 16, 5, 5, this.height*60-10, this.width*60-10);
+			gc.restore();
+		} else {
+			gc.drawImage(IMAGE, 1, 1+18*frameIndex, 16*Math.max(this.width, this.height), 16, 100+this.x*60+5, 100+this.y*60+5, this.width*60-10, this.height*60-10);
+		}
 	}
 
 	public void relocate(double x, double y){
@@ -52,8 +63,22 @@ public class Ship{
 		}
 	}
 
+	public boolean isDestroyed(Board board){
+		int px = (int)this.x;
+		int py = (int)this.y;
+		for (int i = px; i < px+this.width; i++){
+			for (int j = py; j < py+this.height; j++){
+				if (board.getCell(i, j) != 3){
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	public boolean isValid(ArrayList<Ship> ships){
-		if (this.x >= 0 && this.y >= 0 && this.x+this.width < 10 && this.y+this.height < 10){
+		if (this.x >= 0 && this.y >= 0 && this.x+this.width <= 10 && this.y+this.height <= 10){
 			for (Ship ship : ships){
 				if (ship != this){
 					Rectangle2D thisRect = new Rectangle2D(this.x, this.y, this.width, this.height);

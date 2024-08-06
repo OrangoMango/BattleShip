@@ -8,7 +8,7 @@ import javafx.scene.canvas.*;
 import javafx.scene.paint.Color;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.animation.*;
+import javafx.animation.AnimationTimer;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -37,6 +37,7 @@ public class ClientApplication extends Application{
 		Canvas canvas = new Canvas(WIDTH, HEIGHT);
 		pane.getChildren().add(canvas);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
+		gc.setImageSmoothing(false);
 
 		// Load ships
 		this.ships.add(new Ship(0, 0, 1, 5));
@@ -105,7 +106,15 @@ public class ClientApplication extends Application{
 		this.board = new Board(this.ships);
 
 		this.client = new Client(Util.getLocalAddress(), 1234);
-		this.client.listen(this.board, this.enemyBoard);
+		this.client.listen(this.board, this.enemyBoard, mySide -> {
+			System.out.println(mySide);
+		}, boardStatus -> {
+			if (boardStatus == null){
+				System.out.println("GAME OVER (I lost)");
+			} else {
+				System.out.println("GAME OVER (they lost)");
+			}
+		});
 
 		if (!this.client.isConnected()){
 			System.exit(0); // Connection error
@@ -149,5 +158,7 @@ public class ClientApplication extends Application{
 				ship.render(gc);
 			}
 		}
+
+		this.board.renderIndicators(gc, this.client.isCurrentTurn() ? this.enemyBoard : null);
 	}
 }

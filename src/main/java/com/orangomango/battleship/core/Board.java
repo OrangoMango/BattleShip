@@ -1,11 +1,14 @@
 package com.orangomango.battleship.core;
 
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 
 public class Board{
+	private static final Image WATER_IMAGE = new Image(Board.class.getResourceAsStream("/water.png"));
+	private static final Image INDICATOR_IMAGE = new Image(Board.class.getResourceAsStream("/indicator.png"));
+
 	/*
 	 * 0 - empty
 	 * 1 - ship
@@ -44,7 +47,7 @@ public class Board{
 		}
 	}
 
-	public void update(int x, int y){
+	public boolean update(int x, int y){
 		int num = this.board[x][y];
 		if (num == 0){
 			this.board[x][y] = 2;
@@ -53,44 +56,48 @@ public class Board{
 		}
 
 		// Check if a ship got destroyed
-		// TODO ...
+		boolean shipDestroyed = false;
+
+		for (Ship ship : this.ships){
+			if (ship.contains(x, y) && ship.isDestroyed(this)){
+				shipDestroyed = true;
+				break;
+			}
+		}
+
+		return shipDestroyed;
+	}
+
+	public boolean isGameOver(){
+		for (Ship ship : this.ships){
+			if (!ship.isDestroyed(this)){
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public void render(GraphicsContext gc, int[][] enemyBoard){
-		gc.setStroke(enemyBoard == null ? Color.WHITE : Color.LIME);
-		gc.setLineWidth(2);
-		gc.strokeRect(100, 100, 600, 600);
+		final int[][] board = enemyBoard == null ? this.board : enemyBoard;
 
+		for (int x = 0; x < 10; x++){
+			for (int y = 0; y < 10; y++){
+				gc.drawImage(WATER_IMAGE, 100+x*60, 100+y*60, 60, 60);
+			}
+		}
+	}
+
+	public void renderIndicators(GraphicsContext gc, int[][] enemyBoard){
 		final int[][] board = enemyBoard == null ? this.board : enemyBoard;
 
 		for (int x = 0; x < 10; x++){
 			for (int y = 0; y < 10; y++){
 				if (board[x][y] != 0){
-					Color color = null;
-					switch (board[x][y]){
-						case 1:
-							color = Color.WHITE;
-							break;
-						case 2:
-							color = Color.BLUE;
-							break;
-						case 3:
-							color = Color.RED;
-							break;
-					}
-
-					gc.setFill(color);
-					gc.fillRect(100+x*60, 100+y*60, 60, 60);
+					final int frameIndex = board[x][y] == 3 ? 0 : (board[x][y] == 2 ? 1 : -1);
+					gc.drawImage(INDICATOR_IMAGE, 1+18*frameIndex, 1, 16, 16, 100+x*60, 100+y*60, 60, 60);
 				}
 			}
-		}
-
-		for (int i = 1; i < 10; i++){
-			gc.strokeLine(100+i*60, 100, 100+i*60, 700);
-		}
-
-		for (int i = 1; i < 10; i++){
-			gc.strokeLine(100, 100+i*60, 700, 100+i*60);
 		}
 	}
 

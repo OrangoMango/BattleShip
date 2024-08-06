@@ -10,6 +10,7 @@ public class Util{
 	public static final String PLAYER_READY = "player_ready";
 	public static final String PLAYER_TURN = "player_turn";
 	public static final String ENEMY_RESPONSE = "enemy_response";
+	public static final String GAMEOVER = "gameover";
 
 	public static String getLocalAddress(){
 		try (final DatagramSocket datagramSocket = new DatagramSocket()){
