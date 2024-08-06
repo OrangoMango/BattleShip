@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
 import java.net.*;
+import java.io.*;
 
 public class Util{
 	public static final String JOIN_ACCEPTED = "join_accepted";
@@ -18,6 +19,20 @@ public class Util{
 	public static final int WIDTH = 800;
 	public static final int HEIGHT = 800;
 	public static final int GAME_PORT = 12345;
+	public static final String APP_TITLE = "BattleShip";
+	public static String CREDITS;
+
+	static {
+		try {
+			StringBuilder builder = new StringBuilder();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(Util.class.getResourceAsStream("/credits.txt")));
+			reader.lines().forEach(line -> builder.append(line).append("\n"));
+			reader.close();
+			CREDITS = builder.toString();
+		} catch (IOException ex){
+			ex.printStackTrace();
+		}
+	}
 
 	public static String getLocalAddress(){
 		try (final DatagramSocket datagramSocket = new DatagramSocket()){

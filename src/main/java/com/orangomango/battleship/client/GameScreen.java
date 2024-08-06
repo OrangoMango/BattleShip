@@ -1,5 +1,7 @@
 package com.orangomango.battleship.client;
 
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.canvas.*;
@@ -12,8 +14,10 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 import com.orangomango.battleship.Util;
+import com.orangomango.battleship.HomeScreen;
 import com.orangomango.battleship.core.Board;
 import com.orangomango.battleship.core.Ship;
+import com.orangomango.battleship.server.Server;
 
 public class GameScreen{
 	private Client client;
@@ -27,13 +31,25 @@ public class GameScreen{
 	private double dragOffsetX, dragOffsetY;
 	private double backupDragX, backupDragY;
 	private Scene scene;
+	private AnimationTimer loop;
+	private Stage stage;
+	private Server server;
 
-	public GameScreen(){
+	public GameScreen(Stage stage, Server server){
+		this.stage = stage;
+		this.server = server;
 		StackPane pane = new StackPane();
 		Canvas canvas = new Canvas(Util.WIDTH, Util.HEIGHT);
 		pane.getChildren().add(canvas);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 		gc.setImageSmoothing(false);
+
+		if (this.server != null){
+			this.server.setOnError(() -> {
+				backToHome();
+				Util.showErrorMessage("Connection error", "Could not reach client", "A player disconnected");
+			});
+		}
 
 		// Load ships
 		this.ships.add(new Ship(0, 0, 1, 5));
@@ -53,7 +69,7 @@ public class GameScreen{
 				String pos = Util.convertPos((int)px, (int)py);
 				this.client.send(Util.SHOOT_MESSAGE);
 				this.client.send(Util.SHOOT_MESSAGE+":"+pos);
-			} else {
+			} else if (!this.gameStarted){
 				Ship found = null;
 				for (Ship ship : this.ships){
 					if (ship.contains(px, py)){
@@ -114,6 +130,9 @@ public class GameScreen{
 			} else {
 				System.out.println("GAME OVER (they lost)");
 			}
+
+			// TODO: some gameover screen and then quit
+			backToHome();
 		});
 
 		if (!this.client.isConnected()){
@@ -122,16 +141,27 @@ public class GameScreen{
 			return;
 		}
 
-		AnimationTimer loop = new AnimationTimer(){
+		this.loop = new AnimationTimer(){
 			@Override
 			public void handle(long time){
 				update(gc);
 			}
 		};
-		loop.start();
+		this.loop.start();
 
 		this.scene = new Scene(pane, Util.WIDTH, Util.HEIGHT);
 		this.scene.setFill(Color.BLACK);
+	}
+
+	private void backToHome(){
+		this.loop.stop();
+		this.client.quit();
+		Platform.runLater(() -> {
+			HomeScreen homeScreen = new HomeScreen(this.stage);
+			Scene scene = homeScreen.getScene();
+			this.stage.setTitle(Util.APP_TITLE);
+			this.stage.setScene(scene);
+		});
 	}
 
 	private void update(GraphicsContext gc){
@@ -161,6 +191,11 @@ public class GameScreen{
 		}
 
 		this.board.renderIndicators(gc, this.client.isCurrentTurn() ? this.enemyBoard : null);
+
+		if (!this.client.isConnected()){
+			backToHome(); // Connection error
+			Util.showErrorMessage("Connection error", "Could not connect client", "There was an error while connecting to the server");
+		}
 	}
 
 	public Client getClient(){

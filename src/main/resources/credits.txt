@@ -1,0 +1,16 @@
+BattleShip game, implementation in Java/JavaFX
+--------
+
+Original board game published in 1931
+
+v1.0 - First release (Aug 2024)
+Code and Graphics by OrangoMango
+Sound and Music from freesound.org
+
+- Game page:
+https://orangomango.itch.io/battleship
+
+- Source code:
+https://github.com/OrangoMango/BattleShip
+
+Have fun :)

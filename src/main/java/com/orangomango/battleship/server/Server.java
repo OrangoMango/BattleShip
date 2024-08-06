@@ -13,7 +13,8 @@ public class Server{
 	private Board board1, board2;
 	private String host;
 	private int port;
-	private boolean serverStarted = false;
+	private volatile boolean serverStarted = false;
+	private Runnable onError;
 
 	public Server(String host, int port){
 		this.host = host;
@@ -93,6 +94,7 @@ public class Server{
 	public void destroy(){
 		try {
 			this.server.close();
+			this.serverStarted = false;
 		} catch (IOException ex){
 			ex.printStackTrace();
 		}
@@ -119,5 +121,18 @@ public class Server{
 
 	public boolean isServerStarted(){
 		return this.serverStarted;
+	}
+
+	public void setOnError(Runnable r){
+		this.onError = r;
+	}
+
+	public void fireError(){
+		if (this.onError != null){
+			Runnable r = this.onError;
+			this.onError = null; // Ensure that this runnable only runs once
+			r.run();
+			destroy();
+		}
 	}
 }

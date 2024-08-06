@@ -6,6 +6,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.canvas.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.input.KeyCode;
 import javafx.animation.AnimationTimer;
 
@@ -17,6 +19,8 @@ import com.orangomango.battleship.client.GameScreen;
 import com.orangomango.battleship.server.Server;
 
 public class HomeScreen{
+	private static final Font FONT = Font.loadFont(HomeScreen.class.getResourceAsStream("/font.ttf"), 25);
+
 	private HashMap<KeyCode, Boolean> keys = new HashMap<>();
 	private Scene scene;
 	private Stage stage;
@@ -25,6 +29,8 @@ public class HomeScreen{
 	private int selectedButton = 0;
 	private boolean inputDisabled;
 	private Server server;
+	private boolean showCredits = false;
+	private double offset = 0;
 
 	public HomeScreen(Stage stage){
 		this.stage = stage;
@@ -36,6 +42,8 @@ public class HomeScreen{
 		canvas.setFocusTraversable(true);
 		canvas.setOnKeyPressed(e -> this.keys.put(e.getCode(), true));
 		canvas.setOnKeyReleased(e -> this.keys.put(e.getCode(), false));
+
+		canvas.setOnMousePressed(e -> this.showCredits = false);
 
 		//Client.discover();
 
@@ -54,7 +62,8 @@ public class HomeScreen{
 			startGameScreen();
 		});
 		UiChoice creditsButton = new UiChoice(400, 400, "CREDITS", () -> {
-			System.out.println("Credits");
+			this.showCredits = true;
+			this.offset = 0;
 		});
 		UiChoice quitButton = new UiChoice(400, 500, "QUIT", () -> System.exit(0));
 
@@ -64,9 +73,12 @@ public class HomeScreen{
 		this.buttons.add(quitButton);
 
 		this.loop = new AnimationTimer(){
+			private long lastTime = System.nanoTime();
+
 			@Override
 			public void handle(long time){
-				update(gc);
+				update(gc, (time-this.lastTime)/1000000.0);
+				this.lastTime = time;
 			}
 		};
 		this.loop.start();
@@ -76,7 +88,7 @@ public class HomeScreen{
 	}
 
 	private void startGameScreen(){
-		GameScreen gameScreen = new GameScreen();
+		GameScreen gameScreen = new GameScreen(this.stage, this.server);
 		Scene scene = gameScreen.getScene();
 		if (scene != null){
 			this.loop.stop();
@@ -86,45 +98,54 @@ public class HomeScreen{
 		}
 	}
 
-	private void update(GraphicsContext gc){
+	private void update(GraphicsContext gc, double dt){
 		gc.clearRect(0, 0, Util.WIDTH, Util.HEIGHT);
 		gc.setFill(Color.BLACK);
 		gc.fillRect(0, 0, Util.WIDTH, Util.HEIGHT);
 
-		if (this.inputDisabled){
-			if (this.keys.getOrDefault(KeyCode.SPACE, false)){
-				this.inputDisabled = false;
-				this.server.destroy(); // Cancel game
-				this.keys.put(KeyCode.SPACE, false);
-			}
+		if (this.showCredits){
+			this.offset += 0.05*dt;
+			if (this.offset >= Util.HEIGHT) this.offset = 0;
+			gc.setFill(Color.WHITE);
+			gc.setFont(FONT);
+			gc.setTextAlign(TextAlignment.CENTER);
+			gc.fillText(Util.CREDITS, 400, 400-this.offset);
 		} else {
-			if (this.keys.getOrDefault(KeyCode.UP, false)){
-				this.buttons.get(this.selectedButton).setSelected(false);
-				this.selectedButton = (this.selectedButton + this.buttons.size()-1) % this.buttons.size();
-				this.buttons.get(this.selectedButton).setSelected(true);
-				this.keys.put(KeyCode.UP, false);
-			} else if (this.keys.getOrDefault(KeyCode.DOWN, false)){
-				this.buttons.get(this.selectedButton).setSelected(false);
-				this.selectedButton = (this.selectedButton + 1) % this.buttons.size();
-				this.buttons.get(this.selectedButton).setSelected(true);
-				this.keys.put(KeyCode.DOWN, false);
-			} else if (this.keys.getOrDefault(KeyCode.RIGHT, false)){
-				// Select current button
-				this.buttons.get(this.selectedButton).fire();
-				this.keys.put(KeyCode.RIGHT, false);
+			if (this.inputDisabled){
+				if (this.keys.getOrDefault(KeyCode.SPACE, false)){
+					this.inputDisabled = false;
+					this.server.destroy(); // Cancel game
+					this.keys.put(KeyCode.SPACE, false);
+				}
+			} else {
+				if (this.keys.getOrDefault(KeyCode.UP, false)){
+					this.buttons.get(this.selectedButton).setSelected(false);
+					this.selectedButton = (this.selectedButton + this.buttons.size()-1) % this.buttons.size();
+					this.buttons.get(this.selectedButton).setSelected(true);
+					this.keys.put(KeyCode.UP, false);
+				} else if (this.keys.getOrDefault(KeyCode.DOWN, false)){
+					this.buttons.get(this.selectedButton).setSelected(false);
+					this.selectedButton = (this.selectedButton + 1) % this.buttons.size();
+					this.buttons.get(this.selectedButton).setSelected(true);
+					this.keys.put(KeyCode.DOWN, false);
+				} else if (this.keys.getOrDefault(KeyCode.RIGHT, false)){
+					// Select current button
+					this.buttons.get(this.selectedButton).fire();
+					this.keys.put(KeyCode.RIGHT, false);
+				}
 			}
-		}
 
-		for (UiChoice btn : this.buttons){
-			btn.render(gc);
-		}
+			for (UiChoice btn : this.buttons){
+				btn.render(gc);
+			}
 
-		if (this.inputDisabled){
-			gc.save();
-			gc.setGlobalAlpha(0.75);
-			gc.setFill(Color.YELLOW);
-			gc.fillRect(200, 200, 400, 400);
-			gc.restore();
+			if (this.inputDisabled){
+				gc.save();
+				gc.setGlobalAlpha(0.75);
+				gc.setFill(Color.YELLOW);
+				gc.fillRect(200, 200, 400, 400);
+				gc.restore();
+			}
 		}
 	}
 

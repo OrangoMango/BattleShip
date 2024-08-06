@@ -42,7 +42,7 @@ public class ClientManager implements Runnable{
 
 	@Override
 	public void run(){
-		while (true){
+		while (this.server.isServerStarted()){
 			try {
 				String header = this.reader.readLine();
 				System.out.println("Got: "+header);
@@ -75,7 +75,7 @@ public class ClientManager implements Runnable{
 					}
 				} else {
 					// ERROR
-					System.exit(0);
+					this.server.fireError();
 				}
 			} catch (IOException ex){
 				ex.printStackTrace();
