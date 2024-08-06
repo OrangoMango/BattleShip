@@ -11,16 +11,41 @@ public class Server{
 	private ServerSocket server;
 	private ArrayList<ClientManager> clients = new ArrayList<>();
 	private Board board1, board2;
+	private String host;
+	private int port;
 
 	public Server(String host, int port){
+		this.host = host;
+		this.port = port;
+
 		try {
-			this.server = new ServerSocket(port, 2, InetAddress.getByName(host));
+			this.server = new ServerSocket(this.port, 2, InetAddress.getByName(this.host));
 		} catch (IOException ex){
 			ex.printStackTrace();
 		}
 
 		this.board1 = new Board(null);
 		this.board2 = new Board(null);
+
+		startBroadcast();
+	}
+
+	private void startBroadcast(){
+		Thread t = new Thread(() -> {
+			try {
+				DatagramSocket socket = new DatagramSocket();
+				while (!this.server.isClosed()){
+					byte[] information = (this.host+";"+this.port).getBytes();
+					DatagramPacket packet = new DatagramPacket(information, information.length, InetAddress.getByName("255.255.255.255"), 1234);
+					socket.send(packet);
+					Thread.sleep(500);
+				}
+			} catch (Exception ex){
+				ex.printStackTrace();
+			}
+		}, "server-broadcast");
+		t.setDaemon(true);
+		t.start();
 	}
 
 	public void listen(){

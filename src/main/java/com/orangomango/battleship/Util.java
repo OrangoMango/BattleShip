@@ -17,7 +17,7 @@ public class Util{
 
 	public static String getLocalAddress(){
 		try (final DatagramSocket datagramSocket = new DatagramSocket()){
-			datagramSocket.connect(InetAddress.getByName("127.0.0.1"), 12345); // 8.8.8.8
+			datagramSocket.connect(InetAddress.getByName("8.8.8.8"), 12345); 
 			return datagramSocket.getLocalAddress().getHostAddress();
 		} catch (Exception ex){
 			ex.printStackTrace();

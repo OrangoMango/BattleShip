@@ -2,6 +2,7 @@ package com.orangomango.battleship.client;
 
 import java.net.*;
 import java.io.*;
+import java.util.HashSet;
 import java.util.function.Consumer;
 
 import com.orangomango.battleship.Util;
@@ -13,6 +14,9 @@ public class Client{
 	private BufferedWriter writer;
 	private boolean connected, currentTurn;
 	private int id;
+
+	public static HashSet<String> servers = new HashSet<>();
+	private static volatile boolean discovering = true;
 
 	public Client(String host, int port){
 		try {
@@ -32,6 +36,31 @@ public class Client{
 		} catch (IOException ex){
 			ex.printStackTrace();
 		}
+	}
+
+	public static void discover(){
+		Thread t = new Thread(() -> {
+			try {
+				DatagramSocket socket = new DatagramSocket(1234);
+				while (Client.discovering){
+					DatagramPacket packet = new DatagramPacket(new byte[32], 32);
+					socket.receive(packet);
+					String info = new String(packet.getData());
+					Client.servers.add(info);
+					Thread.sleep(500);
+
+					System.out.println(Client.servers);
+				}
+			} catch (Exception ex){
+				ex.printStackTrace();
+			}
+		}, "discover-thread");
+		t.setDaemon(true);
+		t.start();
+	}
+
+	public static void stopDiscovering(){
+		Client.discovering = false;
 	}
 
 	public void listen(Board board, int[][] enemyBoard, Consumer<Boolean> onShipDestroyed, Consumer<String> onGameOver){

@@ -10,6 +10,7 @@ import javafx.animation.AnimationTimer;
 
 import java.util.HashMap;
 
+import com.orangomango.battleship.client.Client;
 import com.orangomango.battleship.client.GameScreen;
 import com.orangomango.battleship.server.Server;
 
@@ -30,6 +31,8 @@ public class HomeScreen{
 		canvas.setOnKeyPressed(e -> this.keys.put(e.getCode(), true));
 		canvas.setOnKeyReleased(e -> this.keys.put(e.getCode(), false));
 
+		Client.discover();
+
 		this.loop = new AnimationTimer(){
 			@Override
 			public void handle(long time){
@@ -44,6 +47,7 @@ public class HomeScreen{
 
 	private void startGameScreen(){
 		this.loop.stop();
+		Client.stopDiscovering();
 		GameScreen gameScreen = new GameScreen();
 		Scene scene = gameScreen.getScene();
 		this.stage.setScene(scene);
