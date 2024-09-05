@@ -32,7 +32,7 @@ public class Server{
 		this.board2 = new Board(null);
 		this.serverStarted = true;
 
-		//startBroadcast();
+		startBroadcast();
 	}
 
 	public void doWhenReady(Runnable r){

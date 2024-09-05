@@ -79,17 +79,27 @@ public class Ship{
 
 	public boolean isValid(ArrayList<Ship> ships){
 		if (this.x >= 0 && this.y >= 0 && this.x+this.width <= 10 && this.y+this.height <= 10){
+			boolean[][] map = new boolean[10][10];
+
 			for (Ship ship : ships){
-				if (ship != this){
-					Rectangle2D thisRect = new Rectangle2D(this.x, this.y, this.width, this.height);
-					Rectangle2D otherRect = new Rectangle2D(ship.x, ship.y, ship.width, ship.height);
-					if (thisRect.intersects(otherRect)){
-						return false;
+				if (ship == this) continue;
+				for (int x = 0; x < ship.width; x++){
+					for (int y = 0; y < ship.height; y++){
+						map[(int)ship.x+x][(int)ship.y+y] = true;
 					}
 				}
 			}
 
-			return true;
+			boolean collide = false;
+			for (int x = 0; x < this.width; x++){
+				for (int y = 0; y < this.height; y++){
+					if (map[(int)this.x+x][(int)this.y+y]){
+						collide = true;
+					}
+				}
+			}
+
+			return !collide;
 		} else {
 			return false;
 		}

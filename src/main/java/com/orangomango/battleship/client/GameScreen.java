@@ -7,7 +7,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.canvas.*;
 import javafx.scene.paint.Color;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
 import javafx.animation.AnimationTimer;
 
 import java.util.HashMap;
@@ -34,6 +33,7 @@ public class GameScreen{
 	private AnimationTimer loop;
 	private Stage stage;
 	private Server server;
+	private boolean startedDragging = false;
 
 	public GameScreen(Stage stage, Server server, String ip, int port){
 		this.stage = stage;
@@ -79,18 +79,12 @@ public class GameScreen{
 				}
 
 				if (found != null){
-					if (e.getButton() == MouseButton.PRIMARY){
-						this.dragShip = found; // Start dragging
-						this.backupDragX = this.dragShip.getX();
-						this.backupDragY = this.dragShip.getY();
-						this.dragOffsetX = px-this.backupDragX;
-						this.dragOffsetY = py-this.backupDragY;
-					} else if (e.getButton() == MouseButton.SECONDARY){
-						found.rotate();
-						if (!found.isValid(this.ships)){
-							found.rotate(); // Reset
-						}
-					}
+					this.dragShip = found; // Start dragging
+					this.backupDragX = this.dragShip.getX();
+					this.backupDragY = this.dragShip.getY();
+					this.dragOffsetX = px-this.backupDragX;
+					this.dragOffsetY = py-this.backupDragY;
+					this.startedDragging = false;
 				}
 			}
 		});
@@ -100,18 +94,36 @@ public class GameScreen{
 				double px = (e.getX()-100) / 60;
 				double py = (e.getY()-100) / 60;
 				this.dragShip.relocate(px-this.dragOffsetX, py-this.dragOffsetY);
+				this.startedDragging = true;
 			}
 		});
 
 		canvas.setOnMouseReleased(e -> {
-			if (this.dragShip != null){
-				if (this.dragShip.isValid(this.ships)){
-					this.dragShip.release();
-				} else {
-					this.dragShip.relocate(this.backupDragX, this.backupDragY);
+			if (this.startedDragging){
+				if (this.dragShip != null){
+					if (this.dragShip.isValid(this.ships)){
+						this.dragShip.release();
+					} else {
+						this.dragShip.relocate(this.backupDragX, this.backupDragY);
+					}
+
+					this.dragShip = null;
+				}
+			} else {
+				double px = (e.getX()-100) / 60;
+				double py = (e.getY()-100) / 60;
+				Ship found = null;
+				for (Ship ship : this.ships){
+					if (ship.contains(px, py)){
+						found = ship;
+						break;
+					}
 				}
 
-				this.dragShip = null;
+				found.rotate();
+				if (!found.isValid(this.ships)){
+					found.rotate(); // Reset
+				}
 			}
 		});
 
